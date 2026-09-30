@@ -21,7 +21,7 @@ concurrency:
 jobs:
   prepare-build:
     if: github.event.inputs.git-ref != ''
-    runs-on: 'ubuntu-24.04'
+    runs-on: 'ubuntu-26.04'
     outputs:
       CURRENT_SHA: ${{ steps.current_commit.outputs.CURRENT_SHA }}
       PREV_RELEASE_SHA: ${{ steps.previous_commit.outputs.PREV_RELEASE_SHA }}
@@ -32,9 +32,9 @@ jobs:
       PREV_TAG_NAME: ${{ steps.previous_commit.outputs.PREV_TAG_NAME }}
     steps:
       - name: Clone Repository (${{ github.event.inputs.git-ref }})
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: 'kana-shii/anikku'
+          repository: 'xkana-shii/anikku'
           token: ${{ secrets.BOT_PAT }}
           fetch-depth: 0
           ref: ${{ github.event.inputs.git-ref }}
@@ -96,21 +96,21 @@ jobs:
           {delimiter}" >> $GITHUB_OUTPUT
 
   build-app:
-    runs-on: 'ubuntu-24.04'
+    runs-on: 'ubuntu-26.04'
     needs: prepare-build
     steps:
       - name: Clone Repository (${{ github.event.inputs.git-ref }} - ${{ needs.prepare-build.outputs.TAG_NAME }})
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: 'kana-shii/anikku'
+          repository: 'xkana-shii/anikku'
           token: ${{ secrets.BOT_PAT }}
           fetch-depth: 0
           ref: ${{ github.event.inputs.git-ref }}
 
       - name: Set up JDK
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
-          java-version: 17
+          java-version: 25.0.4+101.0.LTS
           distribution: temurin
 
       - name: Write google-services.json
@@ -128,7 +128,7 @@ jobs:
           write-mode: overwrite
 
       - name: Set up gradle
-        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
 
       - name: Check code format
         run: ./gradlew spotlessCheck
@@ -140,19 +140,19 @@ jobs:
         run: ./gradlew testReleaseUnitTest
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           path: "**/*.apk"
           retention-days: 1
 
   release-app:
-    runs-on: 'ubuntu-24.04'
+    runs-on: 'ubuntu-26.04'
     needs:
       - prepare-build
       - build-app
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           merge-multiple: true
 
@@ -193,7 +193,7 @@ jobs:
           echo "APK_X86_64_SHA=$sha" >> $GITHUB_OUTPUT
 
       - name: Create release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: ${{ needs.prepare-build.outputs.TAG_NAME }}
           name: Anikku ${{ needs.prepare-build.outputs.BUILD_TYPE_NAME }} ${{ needs.prepare-build.outputs.TAG_NAME }}
